@@ -83,8 +83,11 @@ class Cola:
                 t.guardar()
             self.trabajos[t.id] = t
 
-    def agregar(self, tipo: str, titulo: str, funcion) -> Trabajo:
+    def agregar(self, tipo: str, titulo: str, funcion, datos: dict | None = None) -> Trabajo:
         t = Trabajo(self.carpeta, tipo, titulo)
+        if datos:
+            t.datos.update(datos)
+            t.guardar()
         self.trabajos[t.id] = t
         self._q.put((t, funcion))
         return t

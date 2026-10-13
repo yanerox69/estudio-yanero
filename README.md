@@ -70,3 +70,21 @@ python -m pytest tests
 
 - Este proyecto: MIT. Applio (motor de entrenamiento): MIT, © AI Hispano. Demucs: MIT, © Meta.
 - Entrena solo con tu propia voz. Para publicar versiones de canciones ajenas necesitas los derechos de la obra (licencia mecánica), aunque la voz sea tuya. Si lo publicas, indica que la voz es generada con IA donde lo exija la plataforma.
+
+## Modo servicio (para conectar con Ensamble u otra app)
+
+```bash
+ESTUDIO_API_KEY="una-clave-larga-y-secreta" ESTUDIO_CORS="https://tu-dominio.com" python -m estudio --host 0.0.0.0
+```
+
+Cada petición lleva `X-Api-Key: <clave>` y `X-Usuario: <id del usuario en tu app>`. Cada usuario ve, descarga y usa solo sus propias voces. Sin `ESTUDIO_API_KEY` funciona en modo local, de un solo usuario y con la página web incluida.
+
+| Método y ruta | Para qué |
+|---|---|
+| `POST /entrenar` (multipart: `archivos[]`, `nombre`, `separar_voz`, `consentimiento=true`) | Entrena una voz → devuelve un trabajo |
+| `POST /modelos/importar` (multipart: `archivo` .zip o .pth, `nombre`) | Importa una voz entrenada en Colab |
+| `GET /modelos` · `GET /modelos/{nombre}/descargar` · `DELETE /modelos/{nombre}` | Voces del usuario |
+| `POST /cantar` (multipart: `modelo`, `cancion`, `es_mezcla`, `semitonos` opcional) | Canta con la voz → devuelve un trabajo |
+| `GET /trabajos/{id}` | Estado: `en cola`, `corriendo`, `listo`, `error`, `cancelado`; `progreso` 0–1; `datos.resultado` |
+| `GET /resultados/{archivo}` | Descarga el WAV resultante (`datos.resultado.mezcla` / `datos.resultado.voz`) |
+| `GET /estado` | Salud: GPU, Applio, separación (sin clave) |

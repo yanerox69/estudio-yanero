@@ -109,7 +109,7 @@ def test_entrenar_descargar_cantar(c):
 
     # importar el zip descargado con otro nombre
     r = c.post("/modelos/importar", files={"archivo": ("v.zip", z.content)}, data={"nombre": "copia"})
-    assert r.status_code == 200 and r.json()["index"]
+    assert r.status_code == 200 and r.json()["importado"] is True
     assert len(c.get("/modelos").json()) == 2
     assert c.delete("/modelos/copia").status_code == 200
 
@@ -143,3 +143,45 @@ def test_tono_dataset(tmp_path):
         sf.write(tmp_path / f"c{i}.wav", (0.5 * np.sin(2 * np.pi * 220 * t)).astype(np.float32), sr)
     f = real.tono_dataset(tmp_path)
     assert 210 < f < 230
+
+
+def test_modo_servicio_clave_y_usuarios(tmp_path):
+    c = TestClient(crear_app(datos=tmp_path / "datos", pipe=falso_pipe(tmp_path), api_key="secreta"))
+    assert c.get("/estado").status_code == 200                     # libre
+    assert c.get("/modelos").status_code == 401                    # sin clave
+    assert c.get("/modelos", headers={"X-Api-Key": "mala"}).status_code == 401
+    ana = {"X-Api-Key": "secreta", "X-Usuario": "ana-123"}
+    beto = {"X-Api-Key": "secreta", "X-Usuario": "beto"}
+
+    r = c.post("/entrenar", headers=ana, files=[("archivos", ("a.wav", wav_bytes()))],
+               data={"nombre": "Mi Voz", "consentimiento": "true"})
+    assert r.status_code == 200, r.text
+    t = esperar_h(c, r.json()["id"], ana)
+    assert t["estado"] == "listo", t
+    assert [m["nombre"] for m in c.get("/modelos", headers=ana).json()] == ["mi-voz"]
+    assert c.get("/modelos", headers=beto).json() == []            # beto no ve la voz de ana
+    assert c.get("/modelos/mi-voz/descargar", headers=beto).status_code == 404
+    assert c.get(f"/trabajos/{t['id']}", headers=beto).status_code == 404
+    z = c.get("/modelos/mi-voz/descargar", headers=ana)
+    assert "mi-voz.pth" in zipfile.ZipFile(io.BytesIO(z.content)).namelist()
+
+    # beto puede tener una voz con el mismo nombre sin chocar
+    r = c.post("/modelos/importar", headers=beto, files={"archivo": ("v.zip", z.content)},
+               data={"nombre": "mi voz"})
+    assert r.status_code == 200 and r.json()["nombre"] == "mi-voz"
+
+    r = c.post("/cantar", headers=ana, files={"cancion": ("t.wav", wav_bytes())},
+               data={"modelo": "mi-voz", "es_mezcla": "true"})
+    t = esperar_h(c, r.json()["id"], ana)
+    assert c.get("/resultados/tema_mezcla.wav", headers=ana).status_code == 200
+    assert c.get("/resultados/tema_mezcla.wav", headers=beto).status_code == 404
+
+
+def esperar_h(c, id, h, seg=10):
+    fin = time.time() + seg
+    while time.time() < fin:
+        t = c.get(f"/trabajos/{id}", headers=h).json()
+        if t["estado"] in ("listo", "error", "cancelado"):
+            return t
+        time.sleep(0.05)
+    raise AssertionError("no terminó")
