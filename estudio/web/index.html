@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estudio Yanero</title>
+<style>
+  :root { --bg:#f5f3ef; --card:#fff; --ink:#1c1b1a; --mute:#6d6a66; --line:#e2ded7; --acc:#8c2f39; --acc2:#b8873b; --ok:#2e7a4b; --err:#b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#131211; --card:#1d1c1a; --ink:#eeeae4; --mute:#9d988f; --line:#302d29; --acc:#d06a74; --acc2:#d7a95c; --ok:#62bf87; --err:#f08a80; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:800px; margin:0 auto; padding:28px 16px 70px; }
+  header h1 { font:600 28px/1.1 Georgia,"Times New Roman",serif; margin:0; letter-spacing:-.01em; }
+  header p { color:var(--mute); margin:6px 0 16px; }
+  .avisos { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .chip { font-size:12px; padding:3px 10px; border-radius:20px; border:1px solid var(--line); background:var(--card); }
+  .chip.no { color:var(--err); border-color:var(--err); } .chip.si { color:var(--ok); border-color:var(--ok); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:18px; }
+  h2 { font-size:17px; margin:0 0 4px; } h2 span { color:var(--acc); font-family:Georgia,serif; margin-right:6px; }
+  .sub { color:var(--mute); font-size:13.5px; margin:0 0 12px; }
+  label { display:block; font-weight:600; font-size:13px; margin:12px 0 4px; }
+  input[type=text], input[type=number], select { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); font:inherit; }
+  input[type=file] { width:100%; padding:16px; border:1.5px dashed var(--line); border-radius:10px; background:var(--bg); color:var(--mute); }
+  .fila { display:flex; gap:12px; flex-wrap:wrap; } .fila > * { flex:1 1 200px; }
+  .check { display:flex; gap:8px; align-items:flex-start; font-weight:400; font-size:14px; }
+  .check input { margin-top:4px; }
+  button { margin-top:14px; background:var(--acc); color:#fff; border:0; border-radius:9px; padding:10px 18px; font:600 15px system-ui; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:wait; }
+  .sec { background:transparent; color:var(--ink); border:1px solid var(--line); margin:0; padding:6px 11px; font-size:13px; font-weight:500; }
+  a.sec { text-decoration:none; border-radius:9px; display:inline-block; }
+  .msg { margin-top:10px; font-size:14px; } .err { color:var(--err); } .ok { color:var(--ok); }
+  .item { border-top:1px solid var(--line); padding:13px 0; } .item:first-child { border-top:0; padding-top:4px; }
+  .item b { font-size:15px; } .meta { color:var(--mute); font-size:13px; }
+  .acciones { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; align-items:center; }
+  .barra { height:7px; background:var(--line); border-radius:6px; overflow:hidden; margin:8px 0 4px; }
+  .barra i { display:block; height:100%; background:var(--acc2); transition:width .6s; }
+  .estado { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .estado.listo { color:var(--ok); } .estado.error, .estado.cancelado { color:var(--err); } .estado.corriendo { color:var(--acc2); }
+  audio { width:100%; height:36px; margin-top:6px; }
+  pre { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; max-height:240px; overflow:auto; white-space:pre-wrap; }
+  details summary { cursor:pointer; color:var(--mute); font-size:13px; margin-top:6px; }
+  .vacio { color:var(--mute); font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Estudio Yanero</h1>
+    <p>Sube tus grabaciones, entrena tu voz, descárgala y haz que cante.</p>
+    <div class="avisos" id="avisos"></div>
+  </header>
+
+  <section>
+    <h2><span>1</span>Entrenar mi voz</h2>
+    <p class="sub">Sube todo lo que tengas cantando tú: ensayos, conciertos, grabaciones de estudio, videos. Lo ideal es sumar 10–30 minutos de voz, incluyendo graves y agudos.</p>
+    <form id="fEntrenar">
+      <input type="file" name="archivos" multiple accept="audio/*,video/*" required>
+      <div class="fila">
+        <div><label for="nombre">Nombre de la voz</label><input id="nombre" name="nombre" type="text" value="mi-voz-tenor" required maxlength="40"></div>
+      </div>
+      <label class="check" style="margin-top:12px"><input type="checkbox" name="separar_voz" value="true" checked>
+        <span>Mis grabaciones tienen música de fondo: separar la voz automáticamente</span></label>
+      <label class="check" style="margin-top:8px"><input type="checkbox" name="consentimiento" value="true" required>
+        <span>Todas las grabaciones son de mi propia voz.</span></label>
+      <button type="submit" id="bEntrenar">Entrenar</button>
+      <div class="msg" id="mEntrenar"></div>
+    </form>
+  </section>
+
+  <section>
+    <h2><span>2</span>Mis voces entrenadas</h2>
+    <p class="sub">Descarga el modelo (.pth + .index) para usarlo en cualquier programa RVC, o importa uno entrenado en Colab.</p>
+    <div id="modelos"><p class="vacio">Aún no hay voces entrenadas.</p></div>
+    <details>
+      <summary>Importar una voz entrenada (zip o .pth)</summary>
+      <form id="fImportar">
+        <div class="fila">
+          <div><label>Archivo</label><input type="file" name="archivo" accept=".zip,.pth" required></div>
+          <div><label>Nombre</label><input type="text" name="nombre" required maxlength="40"></div>
+        </div>
+        <button type="submit">Importar</button>
+        <div class="msg" id="mImportar"></div>
+      </form>
+    </details>
+  </section>
+
+  <section>
+    <h2><span>3</span>Cantar con mi voz</h2>
+    <p class="sub">Sube una canción ya cantada por alguien (o tu propia guía rápida) y el sistema reemplaza la voz por la tuya, manteniendo el instrumental.</p>
+    <form id="fCantar">
+      <input type="file" name="cancion" accept="audio/*,video/*" required>
+      <div class="fila">
+        <div><label for="modelo">Voz</label><select id="modelo" name="modelo" required></select></div>
+        <div><label for="semitonos">Ajuste de tono</label>
+          <select id="semitonos" name="semitonos">
+            <option value="">Automático</option>
+            <option value="-12">−12 (una octava abajo)</option><option value="0">0 (sin cambio)</option>
+            <option value="12">+12 (una octava arriba)</option>
+          </select></div>
+      </div>
+      <label class="check" style="margin-top:12px"><input type="checkbox" name="es_mezcla" value="true" checked>
+        <span>La canción trae instrumental (separar y volver a mezclar)</span></label>
+      <button type="submit" id="bCantar">Cantar</button>
+      <div class="msg" id="mCantar"></div>
+    </form>
+  </section>
+
+  <section>
+    <h2>Trabajos</h2>
+    <div id="trabajos"><p class="vacio">Nada en marcha.</p></div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const msg = (el, t, c='') => { el.textContent = t; el.className = 'msg ' + c; };
+async function err(r) { try { const j = await r.json(); return typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail); } catch { return r.statusText; } }
+let abiertos = new Set();
+
+async function estado() {
+  try {
+    const e = await (await fetch('/estado')).json();
+    $('#avisos').innerHTML = [
+      e.gpu ? '<span class="chip si">GPU lista</span>' : '<span class="chip no">Sin GPU: entrena en Colab e importa la voz</span>',
+      e.applio ? '<span class="chip si">Applio instalado</span>' : '<span class="chip no">Falta Applio: ejecuta el instalador</span>',
+      e.demucs ? '<span class="chip si">Separación de voz lista</span>' : '<span class="chip no">Falta demucs</span>'
+    ].join('');
+  } catch {}
+}
+
+async function modelos() {
+  const ms = await (await fetch('/modelos')).json();
+  const sel = $('#modelo').value;
+  $('#modelo').innerHTML = ms.map(m => `<option value="${esc(m.nombre)}">${esc(m.nombre)}</option>`).join('') || '<option value="">— entrena una voz primero —</option>';
+  if (sel) $('#modelo').value = sel;
+  $('#modelos').innerHTML = ms.length ? ms.map(m => `
+    <div class="item">
+      <b>${esc(m.nombre)}</b>
+      <div class="meta">${m.importado ? 'Importada' : `${m.minutos ?? '?'} min de voz · ${m.epocas ?? '?'} épocas`}${m.registro ? ` · registro ${esc(m.registro[0])}–${esc(m.registro[1])}` : ''}</div>
+      <div class="acciones">
+        <a class="sec" href="/modelos/${encodeURIComponent(m.nombre)}/descargar">Descargar voz entrenada</a>
+        <button class="sec" data-borrar="${esc(m.nombre)}">Borrar</button>
+      </div>
+    </div>`).join('') : '<p class="vacio">Aún no hay voces entrenadas.</p>';
+}
+
+function tarjetaTrabajo(t) {
+  const r = t.datos?.resultado || {};
+  let extra = '';
+  if (t.estado === 'listo' && t.tipo === 'entrenar')
+    extra = `<div class="acciones"><a class="sec" href="/modelos/${encodeURIComponent(r.modelo)}/descargar">Descargar voz entrenada</a></div>`;
+  if (t.estado === 'listo' && t.tipo === 'cantar') {
+    for (const [k, f] of Object.entries(r)) if (typeof f === 'string' && f.endsWith('.wav'))
+      extra += `<div class="meta">${k === 'mezcla' ? 'Mezcla final' : 'Solo voz'}</div><audio controls preload="none" src="/resultados/${encodeURIComponent(f)}"></audio>
+                <a class="sec" href="/resultados/${encodeURIComponent(f)}" download>Descargar ${k === 'mezcla' ? 'mezcla' : 'voz'}</a>`;
+  }
+  const ds = t.datos?.dataset;
+  const info = ds ? `<div class="meta">${ds.minutos} min útiles en ${ds.clips} clips${ds.registro ? ` · registro ${esc(ds.registro[0])}–${esc(ds.registro[1])}` : ''}</div>` : '';
+  const vivo = t.estado === 'corriendo' || t.estado === 'en cola';
+  return `<div class="item">
+    <span class="estado ${t.estado}">${esc(t.estado)}</span> · <b>${esc(t.titulo)}</b>
+    ${vivo ? `<div class="barra"><i style="width:${Math.round(t.progreso*100)}%"></i></div>` : ''}
+    <div class="meta ${t.estado === 'error' ? 'err' : ''}">${esc(t.mensaje)}</div>${info}${extra}
+    <div class="acciones">
+      ${vivo ? `<button class="sec" data-cancelar="${t.id}">Cancelar</button>` : ''}
+      <details data-log="${t.id}" ${abiertos.has(t.id) ? 'open' : ''}><summary>Ver registro</summary><pre>…</pre></details>
+    </div></div>`;
+}
+
+let firma = '';
+async function trabajos() {
+  const ts = await (await fetch('/trabajos')).json();
+  const nueva = JSON.stringify(ts.map(t => [t.id, t.estado, t.mensaje, t.progreso]));
+  if (nueva !== firma) {
+    const habiaListo = firma && ts.some(t => t.estado === 'listo' && !firma.includes(`"${t.id}","listo"`));
+    firma = nueva;
+    $('#trabajos').innerHTML = ts.length ? ts.map(tarjetaTrabajo).join('') : '<p class="vacio">Nada en marcha.</p>';
+    if (habiaListo) modelos();
+  }
+  for (const d of document.querySelectorAll('details[data-log][open]'))
+    d.querySelector('pre').textContent = await (await fetch(`/trabajos/${d.dataset.log}/log`)).text() || '(vacío)';
+}
+
+async function enviar(form, url, boton, caja, ok) {
+  const fd = new FormData(form);
+  for (const [k, v] of [...fd]) if (v === '') fd.delete(k);
+  boton && (boton.disabled = true); msg(caja, 'Subiendo…');
+  try {
+    const r = await fetch(url, { method: 'POST', body: fd });
+    if (!r.ok) throw new Error(await err(r));
+    msg(caja, ok, 'ok'); form.reset(); trabajos(); modelos();
+  } catch (e) { msg(caja, e.message, 'err'); }
+  boton && (boton.disabled = false);
+}
+
+$('#fEntrenar').onsubmit = e => { e.preventDefault(); enviar(e.target, '/entrenar', $('#bEntrenar'), $('#mEntrenar'), 'Entrenamiento en marcha. Tarda de 1 a 4 horas con GPU; puedes cerrar esta página.'); };
+$('#fCantar').onsubmit = e => { e.preventDefault();
+  enviar(e.target, '/cantar', $('#bCantar'), $('#mCantar'), 'En cola. El resultado aparecerá en Trabajos.'); };
+$('#fImportar').onsubmit = e => { e.preventDefault(); enviar(e.target, '/modelos/importar', null, $('#mImportar'), 'Voz importada.'); };
+
+document.addEventListener('click', async e => {
+  const b = e.target.dataset;
+  if (b.borrar && confirm(`¿Borrar la voz «${b.borrar}»? Esto no se puede deshacer.`)) { await fetch('/modelos/' + encodeURIComponent(b.borrar), { method: 'DELETE' }); modelos(); }
+  if (b.cancelar) { await fetch(`/trabajos/${b.cancelar}/cancelar`, { method: 'POST' }); trabajos(); }
+});
+document.addEventListener('toggle', e => { const id = e.target.dataset?.log; if (id) { e.target.open ? abiertos.add(id) : abiertos.delete(id); trabajos(); } }, true);
+
+estado(); modelos(); trabajos(); setInterval(trabajos, 4000);
+</script>
+</body>
+</html>
